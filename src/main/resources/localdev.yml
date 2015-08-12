@@ -1,0 +1,5 @@
+pingresponse: wassup
+env: dev
+dbhost: somehost.somedomain.com
+dbport: 12345
+

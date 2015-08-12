@@ -1,0 +1,43 @@
+# language setting
+#
+# AWS config: http://docs.shippable.com/deployment/beanstalk/
+# See http://docs.shippable.com/languages/images/#java
+#
+language: java
+
+branches:
+  only:
+    - master
+
+# specify the build_image
+build_image: shippableimages/ubuntu1404_java
+
+# version numbers
+jdk:
+    - openjdk7
+
+notifications:
+    recipients:
+        - builds@formatic.ly
+    on_success: change
+    on_failure: always
+    
+before_install:
+  - SUDO=$(which sudo) 
+    
+install:
+  - $SUDO apt-get update -y
+  - $SUDO pip install awsebcli
+  - $SUDO apt-get install -y maven --fix-missing
+
+before_script:
+  - if [[ $SHIPPABLE_JDK_VERSION == "openjdk7" ]] ; then export JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64"; export PATH="$PATH:/usr/lib/jvm/java-7-openjdk-amd64/bin"; export java_path="/usr/lib/jvm/java-7-openjdk-amd64/jre/bin/java"; fi
+  - update-alternatives --set java $java_path
+  - java -version 
+   
+script:
+  - echo "$BUILD_NUMBER:$BRANCH:$COMMIT@shippable" > /root/workspace/src/bitbucket.org/andrew_schwabe/dw-shippable-boxfuse-api/src/main/resources/build.txt 
+  - mvn package
+  - mvn boxfuse:fuse -Dboxfuse.payload=target/dwtrainingapi-0.0.2.$BUILD_NUMBER.jar
+  - mvn boxfuse:push -Dboxfuse.image=aschwabe/dwtrainingapi:0.0.2.$BUILD_NUMBER
+  - mvn -e boxfuse:run -Dboxfuse.image=aschwabe/dwtrainingapi:0.0.2.$BUILD_NUMBER -Dboxfuse.env=test -Dboxfuse.healthcheck.path=/ping "-Dboxfuse.jvm.main.args=server test.yml"  

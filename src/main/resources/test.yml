@@ -1,0 +1,12 @@
+pingresponse: wassup
+env: test
+dbhost: somehost.somedomain.com
+dbport: 12345
+
+server:
+  type: simple
+  applicationContextPath: /
+  adminContextPath: /admin
+  connector:
+    type: http
+    port: 80
